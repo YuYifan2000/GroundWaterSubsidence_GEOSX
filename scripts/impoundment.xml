@@ -1,0 +1,255 @@
+<?xml version="1.0" ?>
+
+<Problem>
+
+    <Solvers gravityVector="{ 0.0, 0.0, 0.0 }">
+        <SinglePhaseFVM
+          name="SinglePhaseFlowSolver"
+          logLevel="1"
+          discretization="singlePhaseTPFA"
+          targetRegions="{ Sandstone }"/>
+        <SinglePhasePoromechanics
+          name="PoroelasticitySolver"
+          solidSolverName="LinearElasticitySolver"
+          flowSolverName="SinglePhaseFlowSolver"
+          logLevel="1"
+          targetRegions="{Sandstone }">
+          <LinearSolverParameters
+          directParallel="0"/>
+        </SinglePhasePoromechanics>
+        <SolidMechanicsLagrangianSSLE
+          name="LinearElasticitySolver"
+          timeIntegrationOption="QuasiStatic"
+          logLevel="1"
+          discretization="FE1"
+          targetRegions="{ Sandstone}"/>
+    </Solvers>
+    
+    <NumericalMethods>
+        <FiniteVolume>
+          <TwoPointFluxApproximation
+            name="singlePhaseTPFA"
+            />
+        </FiniteVolume>
+
+        <FiniteElements>
+          <FiniteElementSpace
+          name="FE1"
+          order="1"/>
+        </FiniteElements>
+    </NumericalMethods>
+
+    <Mesh>
+        <InternalMesh name="mesh"
+                    elementTypes="{ C3D8 }"
+                    xCoords="{ 0, 50 }"
+                    yCoords="{ 0, 1 }"
+                    zCoords="{ 0, 1}"
+                    nx="{ 100 }"
+                    ny="{ 1 }"
+                    nz="{ 1 }"
+                    cellBlockNames="{ CB1 }"
+                    />
+    </Mesh>
+
+    <Events maxTime="200.0">
+        <PeriodicEvent
+            name="solverApplication0"
+            endTime="1.e-5"
+            forceDt="1.e-5"
+            target="/Solvers/PoroelasticitySolver"/>
+        <PeriodicEvent 
+            name="solverApplication1"
+            beginTime="1.e-5"
+            endTime="1.0"
+            forceDt="0.99999"
+            target="/Solvers/PoroelasticitySolver"/>
+        <PeriodicEvent 
+            name="solverApplication2"
+            beginTime="1.0"
+            endTime="200.0"
+            forceDt="1.0"
+            target="/Solvers/PoroelasticitySolver"/>
+        <PeriodicEvent
+            name="outputs"
+            timeFrequency="10.0"
+            target="/Outputs/Output"/>
+        <PeriodicEvent 
+            name="timeHistoryOutput"
+            timeFrequency="10.0"
+            targetExactTimestep="0"
+            target="/Outputs/timeHistoryOutput"/>
+        <PeriodicEvent 
+            name="timeHistoryCollection"
+            timeFrequency="10.0"
+            target="/Tasks/pressureCollection"/>
+        <PeriodicEvent 
+            name="displacementtimeHistoryOutput"
+            timeFrequency="10.0"
+            targetExactTimestep="0"
+            target="/Outputs/displacementtimeHistoryOutput"/>
+        <PeriodicEvent 
+            name="disptimeHistoryCollection"
+            timeFrequency="10.0"
+            target="/Tasks/dispCollection"/>
+    </Events>
+    
+    <ElementRegions>
+        <CellElementRegion
+        name="Sandstone"
+        cellBlocks="{ CB1 }"
+        materialList="{ fluid, porousRock}"
+        />
+    </ElementRegions>
+
+    <Constitutive>
+        <PorousElasticIsotropic
+        name="porousRock"
+        solidModelName="skeleton"
+        porosityModelName="skeletonPorosity"
+        permeabilityModelName="skeletonPerm"/>
+
+        <ElasticIsotropic
+        name="skeleton"
+        defaultDensity="0"
+        defaultYoungModulus="1.0e4"
+        defaultPoissonRatio="0.2"/>
+
+        <CompressibleSinglePhaseFluid
+        name="fluid"
+        defaultDensity="1"
+        defaultViscosity="1.0"
+        referencePressure="0.0"
+        referenceDensity="1.0e3"
+        compressibility="0.0e0"
+        referenceViscosity="1"
+        viscosibility="0.0"/>
+
+        <BiotPorosity
+        name="skeletonPorosity"
+        defaultGrainBulkModulus="2.0e4"
+        defaultReferencePorosity="0.3"/>
+
+        <ConstantPermeability
+        name="skeletonPerm"
+        permeabilityComponents="{1.0e-3, 1.0e-3, 1.0e-3}"/>
+      </Constitutive>
+
+    <FieldSpecifications>
+        <FieldSpecification
+          name="initialPressure"
+          initialCondition="1"
+          setNames="{ all }"
+          objectPath="ElementRegions/Sandstone/CB1"
+          fieldName="pressure"
+          scale="0.0"/>
+
+        <FieldSpecification 
+          name="xInitialDisplacement"
+          initialCondition="1"
+          setNames="{ all }"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="0"
+          scale="0.0"/>
+
+        <FieldSpecification 
+          name="yInitialDisplacement"
+          initialCondition="1"
+          setNames="{ all }"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="1"
+          scale="0.0"/>
+
+        <FieldSpecification 
+          name="zInitialDisplacement"
+          initialCondition="1"
+          setNames="{ all }"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="2"
+          scale="0.0"/>
+
+        <FieldSpecification 
+          name="xposconstraint"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="0"
+          scale="0.0"
+          setNames="{ xpos }"/>
+
+        <FieldSpecification 
+          name="yconstraint"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="1"
+          scale="0.0"
+          setNames="{ yneg, ypos }"/>
+
+        <FieldSpecification 
+          name="zconstraint"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="2"
+          scale="0.0"
+          setNames="{ zneg, zpos }"/>
+    
+        <Traction
+          name="xnegconstraint"
+          objectPath="faceManager"
+          direction="{ 1,0,0 }"
+          scale="1.0e0"
+          setNames="{ xneg }"
+          functionName="timeFunction"/>
+
+        <!-- <FieldSpecification 
+          name="boundaryPressure"
+          setNames="{xneg}"
+          objectPath="faceManager"
+          fieldName="pressure"
+          scale="1e0"
+          functionName="timeFunction"/> -->
+        <FieldSpecification 
+          name="boundaryPressure"
+          setNames="{xneg}"
+          objectPath="faceManager"
+          fieldName="pressure"
+          scale="1e0"/>
+    </FieldSpecifications>
+
+    <Functions>
+      <TableFunction
+        name="timeFunction"
+        inputVarNames="{ time }"
+        coordinates="{ 0.0, 0.1e-09, 1e7}"
+        values="{0.0, 1.0, 1.0}"
+        />
+    </Functions>
+
+    <Outputs>
+      <VTK
+      name="Output"/>
+      <TimeHistory
+      name="timeHistoryOutput"
+      sources="{ /Tasks/pressureCollection }"
+      filename="pressure_history"/>
+      <TimeHistory
+      name="displacementtimeHistoryOutput"
+      sources="{ /Tasks/dispCollection }"
+      filename="disp_history"/>
+    </Outputs>
+    <Tasks>
+      <PackCollection
+      name="pressureCollection"
+      objectPath="ElementRegions/Sandstone/CB1"
+      fieldName="pressure"/>
+      <PackCollection
+      name="dispCollection"
+      objectPath="nodeManager"
+      fieldName="totalDisplacement"/>
+    </Tasks>
+
+    
+
+</Problem>

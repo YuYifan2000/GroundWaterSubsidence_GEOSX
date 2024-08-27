@@ -1,3 +1,10 @@
+*.log
+*.hdf5
+*.png
+*.pvg
+Output/
+schema*
+siloFiles/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
