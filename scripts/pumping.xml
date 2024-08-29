@@ -52,7 +52,7 @@
                     />
     </Mesh>
 
-    <Events maxTime="200.0">
+    <Events maxTime="301.0">
         <PeriodicEvent
             name="solverApplication0"
             endTime="1.e-5"
@@ -67,7 +67,7 @@
         <PeriodicEvent 
             name="solverApplication2"
             beginTime="1.0"
-            endTime="200.0"
+            endTime="301.0"
             forceDt="1.0"
             target="/Solvers/PoroelasticitySolver"/>
         <PeriodicEvent
@@ -103,37 +103,37 @@
     </ElementRegions>
 
     <Constitutive>
-        <PorousElasticIsotropic
-        name="porousRock"
-        solidModelName="skeleton"
-        porosityModelName="skeletonPorosity"
-        permeabilityModelName="skeletonPerm"/>
+      <PorousElasticIsotropic
+      name="porousRock"
+      solidModelName="skeleton"
+      porosityModelName="skeletonPorosity"
+      permeabilityModelName="skeletonPerm"/>
 
-        <ElasticIsotropic
-        name="skeleton"
-        defaultDensity="0"
-        defaultYoungModulus="1.0e6"
-        defaultPoissonRatio="0.2"/>
+      <ElasticIsotropic
+      name="skeleton"
+      defaultDensity="0"
+      defaultYoungModulus="1.0e6"
+      defaultPoissonRatio="0.2"/>
 
-        <CompressibleSinglePhaseFluid
-        name="fluid"
-        defaultDensity="1.0e3"
-        defaultViscosity="1.0"
-        referencePressure="0.0"
-        referenceDensity="1.0e3"
-        compressibility="0.0e0"
-        referenceViscosity="1"
-        viscosibility="0.0"/>
+      <CompressibleSinglePhaseFluid
+      name="fluid"
+      defaultDensity="1.0e3"
+      defaultViscosity="1.0"
+      referencePressure="0.0"
+      referenceDensity="1.0e3"
+      compressibility="0.0e0"
+      referenceViscosity="1"
+      viscosibility="0.0"/>
 
-        <BiotPorosity
-        name="skeletonPorosity"
-        defaultGrainBulkModulus="2.0e7"
-        defaultReferencePorosity="0.3"/>
+      <BiotPorosity
+      name="skeletonPorosity"
+      defaultGrainBulkModulus="5.0e6"
+      defaultReferencePorosity="0.3"/>
 
-        <ConstantPermeability
-        name="skeletonPerm"
-        permeabilityComponents="{1.0e-4, 1.0e-4, 1.0e-4}"/>
-      </Constitutive>
+      <ConstantPermeability
+      name="skeletonPerm"
+      permeabilityComponents="{1.0e-5, 1.0e-5, 1.0e-5}"/>
+    </Constitutive>
 
     <FieldSpecifications>
         <FieldSpecification
@@ -199,7 +199,7 @@
           name="xnegconstraint"
           objectPath="faceManager"
           direction="{ 1,0,0 }"
-          scale="-86"
+          scale="-16.24"
           setNames="{ xneg }"
           functionName="timeFunction"/>
 
@@ -208,15 +208,13 @@
           setNames="{xneg}"
           objectPath="faceManager"
           fieldName="pressure"
-          scale="-2.e2"
-          functionName="timeFunction"/>
+          scale="-2.e2"/>
         <FieldSpecification 
           name="xposboundaryPressure"
           setNames="{xpos}"
           objectPath="faceManager"
           fieldName="pressure"
-          scale="-1.e2"
-          functionName="timeFunction"/>
+          scale="-1.e2"/>
     </FieldSpecifications>
 
     <Functions>

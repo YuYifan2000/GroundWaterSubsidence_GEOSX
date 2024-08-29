@@ -48,13 +48,14 @@ class aquifer:
         self.consolidationCoefficient = (k / mu) * Kv / (Se * Kv + b**2)
         self.alpha = b
         self.Kv = Kv
-        self.width = 50
+        self.width = 10
         self.rho = rho
+        S = self.alpha / self.loadingEfficiency / self.Kv # specific storage
+        self.S = S
     
     def computeNormalStress(self, dh):
-        S = self.alpha / self.loadingEfficiency / self.Kv
         g = 9.8
-        return self.rho * g * S * self.width
+        return self.rho * g * self.S * self.width
 
 def getHydromechanicalParametersFromXML(xmlFilePath):
     tree = ElementTree.parse(xmlFilePath)
@@ -140,14 +141,25 @@ def main():
     aquitard1 = aquitard(hydromechanicalParameters, xMin, xMax)
     u_0_t= np.zeros([len(time),1])
     # displacement comparison
+    print('Sigma: ', sigma)
     for i in range(0, len(time)):
         t = time[i,0]
         int_p = sum(pressure[i, :]) * (length / pressure.shape[1])
-        u_0_t[i] = - (sigma * length + aquitard1.alpha * int_p) / aquitard1.Kv
+        u_0_t[i] = - (-sigma * length + aquitard1.alpha * int_p) / aquitard1.Kv
     fig = plt.figure(figsize=[10,5])
     ax = fig.add_subplot(121)
-    ax.plot(time[:,0], u_0_t, label='Analytical')
-    ax.plot(time[:,0], displacement[:,0,0],  label='GEOSX', linestyle='--')
+    # ax.plot(time[:,0], u_0_t, label='Analytical')
+    # aquifer response
+    xml = './pumping.xml'
+    hydromechanicalParameters = getHydromechanicalParametersFromXML(xml)
+    xMin, xMax = getDomainMaxMinXCoordFromXML(xml)
+    aquifer1 = aquifer(hydromechanicalParameters)
+    x_t_0 = aquifer1.rho * 9.8 * aquifer1.S * aquifer1.width*(1 - aquitard1.alpha * aquitard1.loadingEfficiency)*length/aquitard1.Kv*p1
+    x_t_infty = -(p1+p2)/2*aquitard1.alpha*length/aquitard1.Kv + p1*aquifer1.rho * 9.8 * aquifer1.S * aquifer1.width*length/aquitard1.Kv
+    ax.hlines(x_t_0, xmin=0, xmax=300, linestyles='--', label='Undrained Response', colors='k')
+    ax.hlines(x_t_infty, xmin=0, xmax=300, linestyles='--', label='Steady State', colors='k')
+
+    ax.plot(time[:,0], displacement[:,0,0],  label='GEOSX')
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Displacement (m) at x=0')
     ax.legend()
@@ -158,7 +170,7 @@ def main():
     ax.set_xlabel('x')
     ax.set_ylabel('Pressure (Pa)')
     ax.legend()
-    plt.savefig('./pumping.png')
+    plt.savefig('./pumping.png', dpi=300)
     plt.close()
 if __name__ == "__main__":
     main()
@@ -166,4 +178,5 @@ if __name__ == "__main__":
     # hydromechanicalParameters = getHydromechanicalParametersFromXML(xml)
     # xMin, xMax = getDomainMaxMinXCoordFromXML(xml)
     # aquifer1 = aquifer(hydromechanicalParameters)
+    # print('aquifer normal stress: ')
     # print(aquifer1.computeNormalStress(1))
