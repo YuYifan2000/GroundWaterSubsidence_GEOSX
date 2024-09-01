@@ -1,0 +1,306 @@
+<?xml version="1.0" ?>
+
+<Problem>
+
+    <Solvers gravityVector="{ 0.0, 0.0, 0.0 }">
+        <SinglePhaseFVM
+          name="SinglePhaseFlowSolver"
+          logLevel="1"
+          discretization="singlePhaseTPFA"
+          targetRegions="{ Aquitard, Aquifer }"/>
+        <SinglePhasePoromechanics
+          name="PoroelasticitySolver"
+          solidSolverName="LinearElasticitySolver"
+          flowSolverName="SinglePhaseFlowSolver"
+          logLevel="1"
+          targetRegions="{Aquitard, Aquifer }">
+          <LinearSolverParameters
+          directParallel="0"/>
+        </SinglePhasePoromechanics>
+        <SolidMechanicsLagrangianSSLE
+          name="LinearElasticitySolver"
+          timeIntegrationOption="QuasiStatic"
+          logLevel="1"
+          discretization="FE1"
+          targetRegions="{ Aquitard, Aquifer}"/>
+    </Solvers>
+    
+    <NumericalMethods>
+        <FiniteVolume>
+          <TwoPointFluxApproximation
+            name="singlePhaseTPFA"
+            />
+        </FiniteVolume>
+
+        <FiniteElements>
+          <FiniteElementSpace
+          name="FE1"
+          order="1"/>
+        </FiniteElements>
+    </NumericalMethods>
+
+    <Mesh>
+        <InternalMesh name="mesh"
+                    elementTypes="{ C3D8 }"
+                    xCoords="{ 0, 50, 70 }"
+                    yCoords="{ 0, 1 }"
+                    zCoords="{ 0, 1}"
+                    nx="{ 5000, 2000 }"
+                    ny="{ 1 }"
+                    nz="{ 1 }"
+                    cellBlockNames="{ CB1, CB2 }"
+                    />
+    </Mesh>
+
+    <Events maxTime="63072002.0">
+        <PeriodicEvent
+            name="solverApplication0"
+            endTime="1.e-5"
+            forceDt="1.e-5"
+            target="/Solvers/PoroelasticitySolver"/>
+        <PeriodicEvent 
+            name="solverApplication1"
+            beginTime="1.e-5"
+            endTime="1.0"
+            forceDt="0.99999"
+            target="/Solvers/PoroelasticitySolver"/>
+        <PeriodicEvent 
+            name="solverApplication2"
+            beginTime="1.0"
+            endTime="63072002.0"
+            forceDt="86400.0"
+            target="/Solvers/PoroelasticitySolver"/>
+        <PeriodicEvent
+            name="outputs"
+            timeFrequency="86400.0"
+            target="/Outputs/Output"/>
+        <PeriodicEvent 
+            name="timeHistoryOutput"
+            timeFrequency="86400.0"
+            targetExactTimestep="0"
+            target="/Outputs/timeHistoryOutput"/>
+        <PeriodicEvent 
+            name="PtimeHistoryOutput"
+            timeFrequency="86400.0"
+            targetExactTimestep="0"
+            target="/Outputs/aquiferPressureHistoryOutput"/>
+        <PeriodicEvent 
+            name="timeHistoryCollection"
+            timeFrequency="86400.0"
+            target="/Tasks/pressureCollection"/>
+        <PeriodicEvent 
+            name="displacementtimeHistoryOutput"
+            timeFrequency="86400.0"
+            targetExactTimestep="0"
+            target="/Outputs/displacementtimeHistoryOutput"/>
+        <PeriodicEvent 
+            name="disptimeHistoryCollection"
+            timeFrequency="86400.0"
+            target="/Tasks/dispCollection"/>
+        <PeriodicEvent 
+            name="aquiferPressureHistoryOutput"
+            timeFrequency="86400.0"
+            target="/Tasks/aquiferPressureCollection"/>
+    </Events>
+    
+    <ElementRegions>
+        <CellElementRegion
+        name="Aquitard"
+        cellBlocks="{ CB2 }"
+        materialList="{ fluid, porousRockAquitard}"
+        />
+        <CellElementRegion
+        name="Aquifer"
+        cellBlocks="{ CB1 }"
+        materialList="{ fluid, porousRockAquifer}"
+        />
+    </ElementRegions>
+
+    <Constitutive>
+      <PorousElasticIsotropic
+      name="porousRockAquitard"
+      solidModelName="skeletonAquitard"
+      porosityModelName="aquitardPorosity"
+      permeabilityModelName="aquitardPerm"/>
+
+      <PorousElasticIsotropic
+      name="porousRockAquifer"
+      solidModelName="skeletonAquifer"
+      porosityModelName="aquiferPorosity"
+      permeabilityModelName="aquiferPerm"/>
+
+      <ElasticIsotropic
+      name="skeletonAquitard"
+      defaultDensity="0"
+      defaultYoungModulus="1.0e9"
+      defaultPoissonRatio="0.4"/>
+
+      <ElasticIsotropic
+      name="skeletonAquifer"
+      defaultDensity="0"
+      defaultYoungModulus="1.0e10"
+      defaultPoissonRatio="0.25"/>
+
+      <CompressibleSinglePhaseFluid
+      name="fluid"
+      defaultDensity="1.0e3"
+      defaultViscosity="1.0e-3"
+      referencePressure="0.0"
+      referenceDensity="1.0e3"
+      compressibility="4.4e-10"
+      referenceViscosity="1.0e-3"
+      viscosibility="0.0"/>
+
+      <BiotPorosity
+      name="aquitardPorosity"
+      defaultGrainBulkModulus="5.0e9"
+      defaultReferencePorosity="0.4"/>
+
+      <ConstantPermeability
+      name="aquitardPerm"
+      permeabilityComponents="{1.0e-18, 1.0e-18, 1.0e-18}"/>
+
+      <BiotPorosity
+      name="aquiferPorosity"
+      defaultGrainBulkModulus="5.0e10"
+      defaultReferencePorosity="0.2"/>
+
+      <ConstantPermeability
+      name="aquiferPerm"
+      permeabilityComponents="{1.0e-12, 1.0e-12, 1.0e-12}"/>
+    </Constitutive>
+
+    <FieldSpecifications>
+        <FieldSpecification
+          name="initialPressureAquitard"
+          initialCondition="1"
+          setNames="{ all }"
+          objectPath="ElementRegions/Aquitard/CB2"
+          fieldName="pressure"
+          scale="0.0"/>
+
+        <FieldSpecification
+          name="initialPressureAquifer"
+          initialCondition="1"
+          setNames="{ all }"
+          objectPath="ElementRegions/Aquifer/CB1"
+          fieldName="pressure"
+          scale="0.0"/>
+
+        <FieldSpecification 
+          name="xInitialDisplacement"
+          initialCondition="1"
+          setNames="{ all }"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="0"
+          scale="0.0"/>
+
+        <FieldSpecification 
+          name="yInitialDisplacement"
+          initialCondition="1"
+          setNames="{ all }"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="1"
+          scale="0.0"/>
+
+        <FieldSpecification 
+          name="zInitialDisplacement"
+          initialCondition="1"
+          setNames="{ all }"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="2"
+          scale="0.0"/>
+
+        <FieldSpecification 
+          name="xposconstraint"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="0"
+          scale="0.0"
+          setNames="{ xpos }"/>
+
+        <FieldSpecification 
+          name="yconstraint"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="1"
+          scale="0.0"
+          setNames="{ yneg, ypos }"/>
+
+        <FieldSpecification 
+          name="zconstraint"
+          objectPath="nodeManager"
+          fieldName="totalDisplacement"
+          component="2"
+          scale="0.0"
+          setNames="{ zneg, zpos }"/>
+    
+        <!-- <Traction
+          name="xnegconstraint"
+          objectPath="faceManager"
+          direction="{ 1,0,0 }"
+          scale="-0.787"
+          setNames="{ xneg }"
+          functionName="timeFunction"/> -->
+
+          <FieldSpecification 
+          name="xnegboundaryPressure"
+          setNames="{all}"
+          objectPath="ElementRegions/Aquifer/CB1"
+          fieldName="pressure"
+          scale="-1.96e4"
+          functionName="timeFunction"/>
+        <FieldSpecification 
+          name="xposboundaryPressure"
+          setNames="{xpos}"
+          objectPath="faceManager"
+          fieldName="pressure"
+          scale="-1.e4"/>
+    </FieldSpecifications>
+
+    <Functions>
+      <TableFunction
+        name="timeFunction"
+        inputVarNames="{ time }"
+        coordinates="{ 0.0, 0.1e-09, 1e10}"
+        values="{0.0, 1.0, 1.0}"
+        />
+    </Functions>
+
+    <Outputs>
+      <VTK
+      name="Output"/>
+      <TimeHistory
+      name="timeHistoryOutput"
+      sources="{ /Tasks/pressureCollection }"
+      filename="pressure_history"/>
+      <TimeHistory
+      name="aquiferPressureHistoryOutput"
+      sources="{ /Tasks/aquiferPressureCollection }"
+      filename="aquifer_pressure_history"/>
+      <TimeHistory
+      name="displacementtimeHistoryOutput"
+      sources="{ /Tasks/dispCollection }"
+      filename="disp_history"/>
+    </Outputs>
+    <Tasks>
+      <PackCollection
+      name="pressureCollection"
+      objectPath="ElementRegions/Aquitard/CB2"
+      fieldName="pressure"/>
+      <PackCollection
+      name="aquiferPressureCollection"
+      objectPath="ElementRegions/Aquifer/CB1"
+      fieldName="pressure"/>
+      <PackCollection
+      name="dispCollection"
+      objectPath="nodeManager"
+      fieldName="totalDisplacement"/>
+    </Tasks>
+
+    
+
+</Problem>
