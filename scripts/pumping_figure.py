@@ -11,7 +11,7 @@ matplotlib.use('agg')
 class aquitard:
     def __init__(self, hydromechanicalParameters, xMin, xMax):
         E = hydromechanicalParameters["youngModulus"]
-        nu = hydromechanicalParameters["poissonRation"]
+        nu = hydromechanicalParameters["poissonRatio"]
         b = hydromechanicalParameters["biotCoefficient"]
         mu = hydromechanicalParameters["fluidViscosity"]
         cf = hydromechanicalParameters["fluidCompressibility"]
@@ -29,10 +29,14 @@ class aquitard:
         self.alpha = b
         self.Kv = Kv
 
+        print('Aquitard Biot: ', self.alpha)
+        print('Aquitard Hydralic Diffusivity: ', self.consolidationCoefficient)
+        print('Aquitard Time,', self.consolidationTime)
+
 class aquifer:
     def __init__(self, hydromechanicalParameters):
         E = hydromechanicalParameters["youngModulus"]
-        nu = hydromechanicalParameters["poissonRation"]
+        nu = hydromechanicalParameters["poissonRatio"]
         b = hydromechanicalParameters["biotCoefficient"]
         mu = hydromechanicalParameters["fluidViscosity"]
         cf = hydromechanicalParameters["fluidCompressibility"]
@@ -48,14 +52,14 @@ class aquifer:
         self.consolidationCoefficient = (k / mu) * Kv / (Se * Kv + b**2)
         self.alpha = b
         self.Kv = Kv
-        self.width = 10
+        self.width = 25
         self.rho = rho
         S = self.alpha / self.loadingEfficiency / self.Kv # specific storage
         self.S = S
     
     def computeNormalStress(self, dh):
         g = 9.8
-        return self.rho * g * self.S * self.width
+        return self.rho * g * self.S * self.width * self.rho * g * dh
 
 def getHydromechanicalParametersFromXML(xmlFilePath):
     tree = ElementTree.parse(xmlFilePath)
@@ -71,10 +75,10 @@ def getHydromechanicalParametersFromXML(xmlFilePath):
     ])
 
     hydromechanicalParameters["youngModulus"] = float(param1.get("defaultYoungModulus"))
-    hydromechanicalParameters["poissonRation"] = float(param1.get("defaultPoissonRatio"))
+    hydromechanicalParameters["poissonRatio"] = float(param1.get("defaultPoissonRatio"))
 
     E = hydromechanicalParameters["youngModulus"]
-    nu = hydromechanicalParameters["poissonRation"]
+    nu = hydromechanicalParameters["poissonRatio"]
     K = E / 3.0 / (1.0 - 2.0 * nu)
     Kg = float(param2.get("defaultGrainBulkModulus"))
 
@@ -89,6 +93,35 @@ def getHydromechanicalParametersFromXML(xmlFilePath):
     hydromechanicalParameters["permeability"] = perm[0]
 
     return hydromechanicalParameters
+
+def aquiferHydromechanicalParametersFromXML(xmlFilePath):
+    tree = ElementTree.parse(xmlFilePath)
+    param2 = tree.find('Constitutive/BiotPorosity')
+    param3 = tree.find('Constitutive/CompressibleSinglePhaseFluid')
+
+    hydromechanicalParameters = dict.fromkeys([
+        "youngModulus", "poissonRation", "biotCoefficient", "fluidViscosity", "fluidCompressibility", "porosity",
+        "permeability", "fluidDensity"
+    ])
+
+    hydromechanicalParameters["youngModulus"] = 1e10
+    hydromechanicalParameters["poissonRatio"] = 0.25
+
+    E = hydromechanicalParameters["youngModulus"]
+    nu = hydromechanicalParameters["poissonRatio"]
+    K = E / 3.0 / (1.0 - 2.0 * nu)
+    Kg = 5e10
+
+    hydromechanicalParameters["biotCoefficient"] = 1.0 - K / Kg
+    hydromechanicalParameters["porosity"] = 0.2
+    hydromechanicalParameters["fluidViscosity"] = float(param3.get("defaultViscosity"))
+    hydromechanicalParameters["fluidCompressibility"] = float(param3.get("compressibility"))
+    hydromechanicalParameters["fluidDensity"] = float(param3.get("defaultDensity"))
+    hydromechanicalParameters["permeability"] = 1e-12
+
+    return hydromechanicalParameters
+
+
 def getDomainMaxMinXCoordFromXML(xmlFilePath):
     tree = ElementTree.parse(xmlFilePath)
     meshElement = tree.find('Mesh/InternalMesh')
@@ -159,8 +192,8 @@ def main():
     ax.hlines(x_t_0, xmin=0, xmax=300, linestyles='--', label='Undrained Response', colors='k')
     ax.hlines(x_t_infty, xmin=0, xmax=300, linestyles='--', label='Steady State', colors='k')
 
-    ax.plot(time[:,0], displacement[:,0,0],  label='GEOSX')
-    ax.set_xlabel('Time (s)')
+    ax.plot(time[:,0] / 86400, displacement[:,0,0],  label='GEOSX')
+    ax.set_xlabel('Time (day)')
     ax.set_ylabel('Displacement (m) at x=0')
     ax.legend()
 
@@ -180,3 +213,11 @@ if __name__ == "__main__":
     # aquifer1 = aquifer(hydromechanicalParameters)
     # print('aquifer normal stress: ')
     # print(aquifer1.computeNormalStress(1))
+    xml = './pumping.xml'
+    hydromechanicalParameters = getHydromechanicalParametersFromXML(xml)
+    xMin, xMax = getDomainMaxMinXCoordFromXML(xml)
+    # aquitard initialization
+    aquitard1 = aquitard(hydromechanicalParameters, xMin, xMax)
+    aquifer1 = aquifer(aquiferHydromechanicalParametersFromXML(xml))
+    print('aquifer normal stress: ')
+    print(aquifer1.computeNormalStress( 5))

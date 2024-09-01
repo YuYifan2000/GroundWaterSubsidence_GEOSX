@@ -42,17 +42,17 @@
     <Mesh>
         <InternalMesh name="mesh"
                     elementTypes="{ C3D8 }"
-                    xCoords="{ 0, 50 }"
+                    xCoords="{ 0, 20 }"
                     yCoords="{ 0, 1 }"
                     zCoords="{ 0, 1}"
-                    nx="{ 100 }"
+                    nx="{ 2000 }"
                     ny="{ 1 }"
                     nz="{ 1 }"
                     cellBlockNames="{ CB1 }"
                     />
     </Mesh>
 
-    <Events maxTime="301.0">
+    <Events maxTime="63072002.0">
         <PeriodicEvent
             name="solverApplication0"
             endTime="1.e-5"
@@ -67,30 +67,30 @@
         <PeriodicEvent 
             name="solverApplication2"
             beginTime="1.0"
-            endTime="301.0"
-            forceDt="1.0"
+            endTime="63072002.0"
+            forceDt="86400.0"
             target="/Solvers/PoroelasticitySolver"/>
         <PeriodicEvent
             name="outputs"
-            timeFrequency="10.0"
+            timeFrequency="864000.0"
             target="/Outputs/Output"/>
         <PeriodicEvent 
             name="timeHistoryOutput"
-            timeFrequency="10.0"
+            timeFrequency="864000.0"
             targetExactTimestep="0"
             target="/Outputs/timeHistoryOutput"/>
         <PeriodicEvent 
             name="timeHistoryCollection"
-            timeFrequency="10.0"
+            timeFrequency="864000.0"
             target="/Tasks/pressureCollection"/>
         <PeriodicEvent 
             name="displacementtimeHistoryOutput"
-            timeFrequency="10.0"
+            timeFrequency="864000.0"
             targetExactTimestep="0"
             target="/Outputs/displacementtimeHistoryOutput"/>
         <PeriodicEvent 
             name="disptimeHistoryCollection"
-            timeFrequency="10.0"
+            timeFrequency="864000.0"
             target="/Tasks/dispCollection"/>
     </Events>
     
@@ -112,27 +112,27 @@
       <ElasticIsotropic
       name="skeleton"
       defaultDensity="0"
-      defaultYoungModulus="1.0e6"
-      defaultPoissonRatio="0.2"/>
+      defaultYoungModulus="1.0e9"
+      defaultPoissonRatio="0.4"/>
 
       <CompressibleSinglePhaseFluid
       name="fluid"
       defaultDensity="1.0e3"
-      defaultViscosity="1.0"
+      defaultViscosity="1e-3"
       referencePressure="0.0"
       referenceDensity="1.0e3"
-      compressibility="0.0e0"
-      referenceViscosity="1"
+      compressibility="4.4e-10"
+      referenceViscosity="1e-3"
       viscosibility="0.0"/>
 
       <BiotPorosity
       name="skeletonPorosity"
-      defaultGrainBulkModulus="5.0e6"
-      defaultReferencePorosity="0.3"/>
+      defaultGrainBulkModulus="5.0e9"
+      defaultReferencePorosity="0.4"/>
 
       <ConstantPermeability
       name="skeletonPerm"
-      permeabilityComponents="{1.0e-5, 1.0e-5, 1.0e-5}"/>
+      permeabilityComponents="{1.0e-18, 1.0e-18, 1.0e-18}"/>
     </Constitutive>
 
     <FieldSpecifications>
@@ -199,7 +199,7 @@
           name="xnegconstraint"
           objectPath="faceManager"
           direction="{ 1,0,0 }"
-          scale="-16.24"
+          scale="-1.9679"
           setNames="{ xneg }"
           functionName="timeFunction"/>
 
@@ -208,20 +208,20 @@
           setNames="{xneg}"
           objectPath="faceManager"
           fieldName="pressure"
-          scale="-2.e2"/>
+          scale="-4.9e4"/>
         <FieldSpecification 
           name="xposboundaryPressure"
           setNames="{xpos}"
           objectPath="faceManager"
           fieldName="pressure"
-          scale="-1.e2"/>
+          scale="-1.e4"/>
     </FieldSpecifications>
 
     <Functions>
       <TableFunction
         name="timeFunction"
         inputVarNames="{ time }"
-        coordinates="{ 0.0, 0.1e-09, 1e7}"
+        coordinates="{ 0.0, 0.1e-09, 1e10}"
         values="{0.0, 1.0, 1.0}"
         />
     </Functions>
