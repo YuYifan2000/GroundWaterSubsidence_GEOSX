@@ -42,12 +42,12 @@
     <Mesh>
         <InternalMesh name="mesh"
                     elementTypes="{ C3D8 }"
-                    xCoords="{ 0, 1 }"
-                    yCoords="{ 0, 1 }"
+                    xCoords="{ 0, 10 }"
+                    yCoords="{ 0, 10 }"
                     zCoords="{ 0, 100, 110, 210}"
-                    nx="{ 1 }"
-                    ny="{ 1 }"
-                    nz="{ 1000, 100, 1000 }"
+                    nx="{ 5 }"
+                    ny="{ 5 }"
+                    nz="{ 100, 50, 100 }"
                     cellBlockNames="{ CB0, CB2, CB1 }"
                     />
     </Mesh>
@@ -126,7 +126,7 @@
     </ElementRegions>
 
     <Constitutive>
-      <PorousElasticIsotropic
+      <PorousDruckerPrager
       name="porousRockAquitard"
       solidModelName="skeletonAquitard"
       porosityModelName="aquitardPorosity"
@@ -138,9 +138,13 @@
       porosityModelName="aquiferPorosity"
       permeabilityModelName="aquiferPerm"/>
 
-      <ElasticIsotropic
+      <DruckerPrager
       name="skeletonAquitard"
-      defaultDensity="0"
+      defaultDensity="2000"
+      defaultCohesion="1.0e5"
+      defaultFrictionAngle="15"
+      defaultDilationAngle="2"
+      defaultHardeningRate="0.1"
       defaultYoungModulus="1.0e9"
       defaultPoissonRatio="0.4"/>
 

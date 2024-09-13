@@ -51,8 +51,19 @@
                     cellBlockNames="{ CB0, CB2, CB1 }"
                     />
     </Mesh>
+    <Geometry>
 
-    <Events maxTime="63072002.0">
+        <Box
+          name="source0"
+          xMin="{ 0, 0, 40.0 }"
+          xMax="{ 1, 1, 40.1 }"/>
+        <Box
+          name="source1"
+          xMin="{ 0, 0, 150 }"
+          xMax="{ 1, 1, 151 }"/>
+        
+      </Geometry>
+    <Events maxTime="120000.0">
         <!-- <PeriodicEvent
             name="solverApplication0"
             endTime="1.e-5"
@@ -67,48 +78,48 @@
         <PeriodicEvent 
             name="solverApplication2"
             beginTime="0.0"
-            endTime="63072002.0"
-            forceDt="86400.0"
+            endTime="120000.0"
+            forceDt="100.0"
             target="/Solvers/PoroelasticitySolver"/>
         <PeriodicEvent
             name="outputs"
-            timeFrequency="864000.0"
+            timeFrequency="1000.0"
             target="/Outputs/Output"/>
         <PeriodicEvent 
             name="timeHistoryOutput"
-            timeFrequency="864000.0"
+            timeFrequency="1000.0"
             targetExactTimestep="0"
             target="/Outputs/timeHistoryOutput"/>
         <PeriodicEvent 
             name="PtimeHistoryOutput"
-            timeFrequency="864000.0"
+            timeFrequency="1000.0"
             targetExactTimestep="0"
             target="/Outputs/aquiferPressureHistoryOutput"/>
         <PeriodicEvent 
             name="P2timeHistoryOutput"
-            timeFrequency="864000.0"
+            timeFrequency="1000.0"
             targetExactTimestep="0"
             target="/Outputs/aquifer2PressureHistoryOutput"/>
         <PeriodicEvent 
             name="timeHistoryCollection"
-            timeFrequency="864000.0"
+            timeFrequency="1000.0"
             target="/Tasks/pressureCollection"/>
         <PeriodicEvent 
             name="displacementtimeHistoryOutput"
-            timeFrequency="864000.0"
+            timeFrequency="1000.0"
             targetExactTimestep="0"
             target="/Outputs/displacementtimeHistoryOutput"/>
         <PeriodicEvent 
             name="disptimeHistoryCollection"
-            timeFrequency="864000.0"
+            timeFrequency="1000.0"
             target="/Tasks/dispCollection"/>
         <PeriodicEvent 
             name="aquiferPressureHistoryOutput"
-            timeFrequency="864000.0"
+            timeFrequency="1000.0"
             target="/Tasks/aquiferPressureCollection"/>
         <PeriodicEvent 
             name="aquifer2PressureHistoryOutput"
-            timeFrequency="864000.0"
+            timeFrequency="1000.0"
             target="/Tasks/aquifer2PressureCollection"/>
     </Events>
     
@@ -167,7 +178,7 @@
 
       <ConstantPermeability
       name="aquitardPerm"
-      permeabilityComponents="{2.0e-19, 2.0e-19, 2.0e-19}"/>
+      permeabilityComponents="{2.0e-29, 2.0e-29, 2.0e-29}"/>
 
       <BiotPorosity
       name="aquiferPorosity"
@@ -176,7 +187,7 @@
 
       <ConstantPermeability
       name="aquiferPerm"
-      permeabilityComponents="{1.0e-12, 1.0e-12, 1.0e-12}"/>
+      permeabilityComponents="{1.0e-10, 1.0e-10, 1.0e-10}"/>
     </Constitutive>
 
     <FieldSpecifications>
@@ -193,7 +204,7 @@
           setNames="{ all }"
           objectPath="ElementRegions/Aquifer/CB1"
           fieldName="pressure"
-          scale="-2.94e5"/>
+          scale="0"/>
 
         <FieldSpecification
           name="initialPressureAquifer2"
@@ -201,7 +212,21 @@
           setNames="{ all }"
           objectPath="ElementRegions/Aquifer/CB0"
           fieldName="pressure"
-          scale="-4.94e5"/>
+          scale="0"/>
+
+        <SourceFlux
+        name="sourceTerm0"
+        objectPath="ElementRegions/Aquifer/CB0"
+        scale="1e-5"
+        component="0"
+        setNames="{ source0 }"
+        functionName="timeFunction"/>
+        <SourceFlux
+        name="sourceTerm1"
+        objectPath="ElementRegions/Aquifer/CB1"
+        scale="0"
+        component="2"
+        setNames="{ source1 }"/>
 
         <FieldSpecification 
           name="xInitialDisplacement"
@@ -280,8 +305,8 @@
       <TableFunction
         name="timeFunction"
         inputVarNames="{ time }"
-        coordinates="{ 0.0, 0.1e-09, 1e10}"
-        values="{0.0, 1.0, 1.0}"
+        coordinates="{ 0.0, 4.9e4, 5e4, 1e10}"
+        values="{1.0, 1.0, 4.0, 4.0}"
         />
     </Functions>
 

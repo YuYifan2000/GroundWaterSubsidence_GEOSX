@@ -55,6 +55,7 @@ class aquifer:
         self.rho = rho
         S = self.alpha / self.loadingEfficiency / self.Kv # specific storage
         self.S = S
+        print('aquifer S:',S)
     
     def computeNormalStress(self, dh):
         g = 9.8
@@ -166,38 +167,22 @@ def main():
     aquitard1 = aquitard(aquitardParameters, xCoord[0], xCoord[1])
     aquifer1 = aquifer(aquiferParameters, 50)
     fig = plt.figure(figsize=[10,6])
-    ax = fig.add_subplot(211)
-    ax.plot(time[:,0] / 86400, displacement[:,4401,2],  label='GEOSX')
-    ax.set_xlabel('Time (day)')
-    ax.set_ylabel('Displacement (m) at top of aquitard')
-    # ax.legend()
-    ax = fig.add_subplot(212)
+
+    ax = fig.add_subplot(111)
     cmap = plt.get_cmap("tab10")
-    timesteps = range(0, len(time), len(time)//5)
+    timesteps = range(0, len(time), len(time)//10)
     i =0
     for timestep in timesteps:
         x = np.concatenate((x2[timestep, : , 2], x_pressure[timestep,:,2], x1[timestep,:,2]), axis=0)
         p = np.concatenate((aquifer2_pressure[timestep, :], pressure[timestep, :], aquifer1_pressure[timestep, :]), axis=0)
-        ax.plot(x, p,color=cmap(i), label=f'{time[timestep, 0] /86400} Days')
+        ax.plot(x, p,color=cmap(i), label=f'{time[timestep, 0] } seconds')
+        print(aquifer2_pressure[timestep, 20])
         i += 1
     ax.set_xlabel('z')
     ax.set_ylabel('Pressure (Pa)')
     ax.legend()
     fig.tight_layout()
-    plt.savefig('./aquifer_aquitard.png', dpi=300)
-    plt.close()
-
-    fig = plt.figure(figsize=[10,6])
-    ax = fig.add_subplot(111)
-    i =0
-    for timestep in timesteps:
-        ax.plot(positionDisp[timestep, ::4,2], displacement[timestep,::4,2],color=cmap(i), label=f'{time[timestep, 0] /86400} Days')
-        i += 1
-    ax.set_xlabel('z')
-    ax.set_ylabel('Displacement (m)')
-    ax.legend()
-    fig.tight_layout()
-    plt.savefig('./aquifer_aquitard_disp.png', dpi=300)
+    plt.savefig('./test.png', dpi=300)
     plt.close()
     
 
